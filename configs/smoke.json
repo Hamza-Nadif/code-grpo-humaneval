@@ -1,0 +1,9 @@
+{
+  "model": "Qwen/Qwen2.5-Coder-0.5B-Instruct",
+  "max_steps": 1,
+  "num_generations": 2,
+  "gradient_accumulation_steps": 2,
+  "max_completion_length": 128,
+  "quantization": "4bit",
+  "note": "Reference settings for a one-step infrastructure check; pass the matching CLI arguments to train_grpo.py."
+}
