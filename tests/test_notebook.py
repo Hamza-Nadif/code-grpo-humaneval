@@ -33,3 +33,16 @@ def test_controlled_experiment_notebook(steps):
     assert "baseline_pass_at_1" in contents
     assert "trained_pass_at_1" in contents
     assert "colab_files.download" in contents
+
+
+def test_improved_experiment_addresses_observed_bottlenecks():
+    path = Path("notebooks/code_grpo_humaneval_50_step_improved_experiment.ipynb")
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    contents = "\n".join("".join(cell["source"]) for cell in notebook["cells"])
+
+    assert "'--num-generations', '4'" in contents
+    assert "'--gradient-accumulation-steps', '4'" in contents
+    assert "'--max-completion-length', '256'" in contents
+    assert contents.count("'--max-new-tokens', '256'") == 2
+    assert "zero_gradient_steps" in contents
+    assert "mean_training_clipped_ratio" in contents
