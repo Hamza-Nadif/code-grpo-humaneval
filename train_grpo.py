@@ -95,15 +95,16 @@ def main() -> None:
             "divisible by num_generations."
         )
 
+    eval_generations = min(2, args.num_generations)
     training_args = GRPOConfig(
         output_dir=args.output_dir,
         max_steps=args.max_steps,
         learning_rate=args.learning_rate,
         per_device_train_batch_size=1,
-        per_device_eval_batch_size=1,
+        per_device_eval_batch_size=eval_generations,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         num_generations=args.num_generations,
-        num_generations_eval=min(2, args.num_generations),
+        num_generations_eval=eval_generations,
         max_completion_length=args.max_completion_length,
         temperature=args.temperature,
         reward_weights=[0.80, 0.10, 0.05, 0.05],
