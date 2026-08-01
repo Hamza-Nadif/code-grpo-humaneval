@@ -37,6 +37,9 @@ def load_model(model_id: str, quantization: str, adapter: str | None = None):
         tokenizer.pad_token = tokenizer.eos_token
     model_kwargs = {"device_map": "auto", "dtype": "auto"}
     if quantization == "4bit":
+        if not torch.cuda.is_available():
+            raise SystemExit("4-bit model evaluation requires a supported CUDA accelerator")
+        model_kwargs["dtype"] = torch.float16
         model_kwargs["quantization_config"] = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
