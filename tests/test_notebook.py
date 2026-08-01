@@ -46,3 +46,15 @@ def test_improved_experiment_addresses_observed_bottlenecks():
     assert contents.count("'--max-new-tokens', '256'") == 2
     assert "zero_gradient_steps" in contents
     assert "mean_training_clipped_ratio" in contents
+
+
+def test_checkpoint_recovery_notebook_does_not_retrain():
+    path = Path("notebooks/evaluate_checkpoint_25_from_archive.ipynb")
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    contents = "\n".join("".join(cell["source"]) for cell in notebook["cells"])
+
+    assert "checkpoint-25" in contents
+    assert "evaluate_baseline.py" in contents
+    assert "train_grpo.py" not in contents
+    assert "files.upload()" in contents
+    assert "files.download(result_archive)" in contents

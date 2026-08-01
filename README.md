@@ -8,6 +8,8 @@
 
 [Run the improved 50-step diversity experiment in Google Colab](https://colab.research.google.com/github/Hamza-Nadif/code-grpo-humaneval/blob/main/notebooks/code_grpo_humaneval_50_step_improved_experiment.ipynb)
 
+[Evaluate checkpoint 25 from the downloaded experiment archive](https://colab.research.google.com/github/Hamza-Nadif/code-grpo-humaneval/blob/main/notebooks/evaluate_checkpoint_25_from_archive.ipynb)
+
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Hamza-Nadif/code-grpo-humaneval/blob/main/notebooks/code_grpo_humaneval_colab.ipynb)
 
 A reproducible research project for improving Python code generation with
