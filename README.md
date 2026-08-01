@@ -1,5 +1,7 @@
 # Code GRPO on HumanEval
 
+[Open the one-click smoke test in Google Colab](https://colab.research.google.com/github/Hamza-Nadif/code-grpo-humaneval/blob/main/notebooks/code_grpo_humaneval_colab_one_click.ipynb)
+
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Hamza-Nadif/code-grpo-humaneval/blob/main/notebooks/code_grpo_humaneval_colab.ipynb)
 
 A reproducible research project for improving Python code generation with
