@@ -57,6 +57,22 @@ def load_model(model_id: str, quantization: str, adapter: str | None = None):
     return model, tokenizer
 
 
+def generation_kwargs(tokenizer, count: int, args) -> dict:
+    kwargs = {
+        "max_new_tokens": args.max_new_tokens,
+        "do_sample": args.temperature > 0,
+        "num_return_sequences": count,
+        "pad_token_id": tokenizer.pad_token_id,
+        "eos_token_id": tokenizer.eos_token_id,
+    }
+    if args.temperature > 0:
+        kwargs.update(
+            temperature=args.temperature,
+            top_p=args.top_p,
+        )
+    return kwargs
+
+
 def generate_completions(model, tokenizer, prompt: str, count: int, args) -> list[str]:
     import torch
 
@@ -71,18 +87,14 @@ def generate_completions(model, tokenizer, prompt: str, count: int, args) -> lis
     else:
         rendered = f"You are an expert Python programmer.\n\n{prompt}\n\nAnswer:\n"
     inputs = tokenizer(rendered, return_tensors="pt").to(model.device)
-    generator = torch.Generator(device=model.device).manual_seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+
     with torch.inference_mode():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=args.max_new_tokens,
-            do_sample=args.temperature > 0,
-            temperature=max(args.temperature, 1e-5),
-            top_p=args.top_p,
-            num_return_sequences=count,
-            pad_token_id=tokenizer.pad_token_id,
-            eos_token_id=tokenizer.eos_token_id,
-            generator=generator,
+            **generation_kwargs(tokenizer, count, args),
         )
     prompt_tokens = inputs["input_ids"].shape[1]
     return tokenizer.batch_decode(outputs[:, prompt_tokens:], skip_special_tokens=True)

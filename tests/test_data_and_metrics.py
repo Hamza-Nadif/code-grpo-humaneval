@@ -1,7 +1,9 @@
+from argparse import Namespace
+
 import pytest
 
 from build_training_data import split_rows
-from evaluate_baseline import pass_at_k, summarize
+from evaluate_baseline import generation_kwargs, pass_at_k, summarize
 
 
 def test_split_is_deterministic_and_disjoint():
@@ -36,3 +38,18 @@ def test_summary_uses_per_task_samples():
     summary = summarize(rows, [1, 2])
     assert summary["metrics"]["pass@1"] == pytest.approx(0.25)
     assert summary["metrics"]["pass@2"] == pytest.approx(0.5)
+
+
+def test_greedy_generation_uses_transformers_5_compatible_kwargs():
+    class FakeTokenizer:
+        pad_token_id = 0
+        eos_token_id = 1
+
+    args = Namespace(seed=42, max_new_tokens=128, temperature=0.0, top_p=0.95)
+
+    kwargs = generation_kwargs(FakeTokenizer(), 1, args)
+
+    assert kwargs["do_sample"] is False
+    assert "generator" not in kwargs
+    assert "temperature" not in kwargs
+    assert "top_p" not in kwargs
