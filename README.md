@@ -1,5 +1,7 @@
 # Code GRPO on HumanEval
 
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Hamza-Nadif/code-grpo-humaneval/blob/main/notebooks/code_grpo_humaneval_colab.ipynb)
+
 A reproducible research project for improving Python code generation with
 Group Relative Policy Optimization (GRPO), execution-based rewards, and a
 leakage-aware HumanEval protocol.
@@ -10,6 +12,9 @@ The project is deliberately split into four stages:
 2. measure a frozen model baseline;
 3. optimize a LoRA adapter with GRPO;
 4. evaluate the adapter on the untouched internal test split.
+
+For a hosted GPU run that does not use local disk or GPU resources, open the
+Colab notebook with the badge above and execute its cells in order.
 
 > **Security:** model-generated code is untrusted. The local executor adds
 > time, memory, process, and file limits, but it is not a security boundary.
