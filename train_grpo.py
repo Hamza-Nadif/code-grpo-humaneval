@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 from pathlib import Path
 
 from code_grpo.io_utils import read_jsonl
@@ -29,6 +30,16 @@ def resolve_precision(requested: str, cuda_available: bool, bf16_supported: bool
     if requested == "bf16" and not bf16_supported:
         raise ValueError("bf16 was requested, but the active CUDA accelerator does not support it")
     return requested
+
+
+def cast_trainable_parameters_to_fp32(model) -> dict[str, int]:
+    """Keep QLoRA adapter gradients in FP32 for stable mixed-precision updates."""
+    for parameter in model.parameters():
+        if parameter.requires_grad and parameter.is_floating_point():
+            parameter.data = parameter.data.float()
+    return dict(
+        Counter(str(parameter.dtype) for parameter in model.parameters() if parameter.requires_grad)
+    )
 
 
 def validate_dataset(path: str) -> dict:
@@ -196,6 +207,8 @@ def main() -> None:
         peft_config=peft_config,
         quantization_config=quantization_config,
     )
+    trainable_dtypes = cast_trainable_parameters_to_fp32(trainer.model)
+    print(f"Trainable parameter dtypes after QLoRA preparation: {trainable_dtypes}")
     trainer.train()
     trainer.save_model(args.output_dir)
     Path(args.output_dir, "experiment_config.json").write_text(
