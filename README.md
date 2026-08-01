@@ -155,6 +155,7 @@ python train_grpo.py \
   --train-data data/humaneval_train.jsonl \
   --eval-data data/humaneval_validation.jsonl \
   --quantization 4bit \
+  --precision auto \
   --num-generations 4 \
   --gradient-accumulation-steps 4 \
   --max-steps 100 \

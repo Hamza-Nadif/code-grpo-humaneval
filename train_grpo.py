@@ -18,6 +18,19 @@ from reward_function import (
 from sandbox.executor import LocalExecutor
 
 
+def resolve_precision(requested: str, cuda_available: bool, bf16_supported: bool) -> str:
+    """Resolve a training precision that is supported by the active device."""
+    if requested == "auto":
+        if not cuda_available:
+            return "fp32"
+        return "bf16" if bf16_supported else "fp16"
+    if requested in {"fp16", "bf16"} and not cuda_available:
+        raise ValueError(f"{requested} training requires a CUDA accelerator")
+    if requested == "bf16" and not bf16_supported:
+        raise ValueError("bf16 was requested, but the active CUDA accelerator does not support it")
+    return requested
+
+
 def validate_dataset(path: str) -> dict:
     rows = list(read_jsonl(path))
     required = {"task_id", "prompt", "starter_code", "test", "entry_point"}
@@ -49,6 +62,15 @@ def main() -> None:
     parser.add_argument("--lora-r", type=int, default=16)
     parser.add_argument("--lora-alpha", type=int, default=32)
     parser.add_argument("--quantization", choices=("none", "4bit"), default="4bit")
+    parser.add_argument(
+        "--precision",
+        choices=("auto", "fp16", "bf16", "fp32"),
+        default="auto",
+        help=(
+            "Training precision. Auto uses BF16 when supported, FP16 on older CUDA GPUs, "
+            "and FP32 on CPU."
+        ),
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--allow-local-code-execution", action="store_true")
@@ -96,6 +118,17 @@ def main() -> None:
         )
 
     eval_generations = min(2, args.num_generations)
+    precision = resolve_precision(
+        args.precision,
+        cuda_available=torch.cuda.is_available(),
+        bf16_supported=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
+    )
+    model_dtype = {
+        "fp16": torch.float16,
+        "bf16": torch.bfloat16,
+        "fp32": torch.float32,
+    }[precision]
+    print(f"Resolved training precision: {precision}")
     training_args = GRPOConfig(
         output_dir=args.output_dir,
         max_steps=args.max_steps,
@@ -119,7 +152,9 @@ def main() -> None:
         report_to="none",
         seed=args.seed,
         remove_unused_columns=False,
-        fp16=torch.cuda.is_available(),
+        fp16=precision == "fp16",
+        bf16=precision == "bf16",
+        model_init_kwargs={"dtype": model_dtype},
     )
     peft_config = LoraConfig(
         r=args.lora_r,
@@ -136,7 +171,7 @@ def main() -> None:
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_compute_dtype=model_dtype,
             bnb_4bit_use_double_quant=True,
         )
 
@@ -164,7 +199,13 @@ def main() -> None:
     trainer.train()
     trainer.save_model(args.output_dir)
     Path(args.output_dir, "experiment_config.json").write_text(
-        json.dumps({"configuration": vars(args), "environment": experiment_metadata()}, indent=2)
+        json.dumps(
+            {
+                "configuration": {**vars(args), "resolved_precision": precision},
+                "environment": experiment_metadata(),
+            },
+            indent=2,
+        )
         + "\n",
         encoding="utf-8",
     )
