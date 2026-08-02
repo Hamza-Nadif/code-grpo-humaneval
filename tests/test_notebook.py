@@ -72,3 +72,16 @@ def test_sft_grpo_notebook_keeps_test_split_for_evaluation_only():
     assert "sft_grpo_pass_at_1" in contents
     assert contents.count("data/humaneval_test.jsonl") == 1
     assert "copy_final_adapter" in contents
+
+
+def test_multiseed_notebook_records_seed_everywhere():
+    path = Path("notebooks/code_sft_grpo_multiseed_replication.ipynb")
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    contents = "\n".join("".join(cell["source"]) for cell in notebook["cells"])
+
+    assert "SEED = 7  # @param [7, 123]" in contents
+    assert contents.count("'--seed', str(SEED)") == 3
+    assert "'seed': SEED" in contents
+    assert "code-sft-grpo-seed-{SEED}-results" in contents
+    assert "data/humaneval_train.jsonl" in contents
+    assert contents.count("data/humaneval_test.jsonl") == 1
