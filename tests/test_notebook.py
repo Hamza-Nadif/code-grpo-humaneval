@@ -58,3 +58,17 @@ def test_checkpoint_recovery_notebook_does_not_retrain():
     assert "train_grpo.py" not in contents
     assert "files.upload()" in contents
     assert "files.download(result_archive)" in contents
+
+
+def test_sft_grpo_notebook_keeps_test_split_for_evaluation_only():
+    path = Path("notebooks/code_sft_grpo_humaneval_experiment.ipynb")
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    contents = "\n".join("".join(cell["source"]) for cell in notebook["cells"])
+
+    assert "train_sft.py" in contents
+    assert "'--adapter', SFT_DIR" in contents
+    assert "base_pass_at_1" in contents
+    assert "sft_pass_at_1" in contents
+    assert "sft_grpo_pass_at_1" in contents
+    assert contents.count("data/humaneval_test.jsonl") == 1
+    assert "copy_final_adapter" in contents

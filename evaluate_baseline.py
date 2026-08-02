@@ -12,6 +12,7 @@ from pathlib import Path
 
 from code_grpo.io_utils import read_jsonl, write_jsonl
 from code_grpo.metadata import experiment_metadata
+from code_grpo.prompts import conversation_prompt
 from reward_function import score_completion
 from sandbox.executor import LocalExecutor
 
@@ -76,10 +77,7 @@ def generation_kwargs(tokenizer, count: int, args) -> dict:
 def generate_completions(model, tokenizer, prompt: str, count: int, args) -> list[str]:
     import torch
 
-    messages = [
-        {"role": "system", "content": "You are an expert Python programmer."},
-        {"role": "user", "content": prompt},
-    ]
+    messages = conversation_prompt(prompt)
     if getattr(tokenizer, "chat_template", None):
         rendered = tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True

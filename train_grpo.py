@@ -10,6 +10,7 @@ from pathlib import Path
 
 from code_grpo.io_utils import read_jsonl
 from code_grpo.metadata import experiment_metadata
+from code_grpo.prompts import conversation_prompt
 from reward_function import (
     conciseness_reward,
     format_reward,
@@ -61,6 +62,7 @@ def main() -> None:
     parser.add_argument("--train-data", default="data/humaneval_train.jsonl")
     parser.add_argument("--eval-data", default="data/humaneval_validation.jsonl")
     parser.add_argument("--model", default="Qwen/Qwen2.5-Coder-0.5B-Instruct")
+    parser.add_argument("--adapter", help="Optional trainable SFT adapter to continue with GRPO")
     parser.add_argument("--output-dir", default="outputs/qwen-code-grpo")
     parser.add_argument("--max-steps", type=int, default=100)
     parser.add_argument("--learning-rate", type=float, default=5e-6)
@@ -107,8 +109,8 @@ def main() -> None:
     try:
         import torch
         from datasets import Dataset
-        from peft import LoraConfig
-        from transformers import BitsAndBytesConfig
+        from peft import LoraConfig, PeftModel
+        from transformers import AutoModelForCausalLM, BitsAndBytesConfig
         from trl import GRPOConfig, GRPOTrainer
     except ImportError as exc:
         raise SystemExit("Install dependencies with: pip install -r requirements.txt") from exc
@@ -120,6 +122,12 @@ def main() -> None:
             train_dataset = train_dataset.remove_columns(name)
         if name in eval_dataset.column_names:
             eval_dataset = eval_dataset.remove_columns(name)
+    train_dataset = train_dataset.map(
+        lambda row: {"prompt": conversation_prompt(row["prompt"])}
+    )
+    eval_dataset = eval_dataset.map(
+        lambda row: {"prompt": conversation_prompt(row["prompt"])}
+    )
 
     effective_batch = args.gradient_accumulation_steps
     if effective_batch % args.num_generations:
@@ -193,8 +201,22 @@ def main() -> None:
     else:
         executor = LocalExecutor(timeout_seconds=args.timeout)
 
+    trainer_model = args.model
+    trainer_peft_config = peft_config
+    trainer_quantization_config = quantization_config
+    if args.adapter:
+        model_kwargs = {"dtype": model_dtype}
+        if quantization_config is not None:
+            model_kwargs["quantization_config"] = quantization_config
+        base_model = AutoModelForCausalLM.from_pretrained(args.model, **model_kwargs)
+        trainer_model = PeftModel.from_pretrained(
+            base_model, args.adapter, is_trainable=True
+        )
+        trainer_peft_config = None
+        trainer_quantization_config = None
+
     trainer = GRPOTrainer(
-        model=args.model,
+        model=trainer_model,
         reward_funcs=[
             make_correctness_reward(executor),
             syntax_reward,
@@ -204,8 +226,8 @@ def main() -> None:
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        peft_config=peft_config,
-        quantization_config=quantization_config,
+        peft_config=trainer_peft_config,
+        quantization_config=trainer_quantization_config,
     )
     trainable_dtypes = cast_trainable_parameters_to_fp32(trainer.model)
     print(f"Trainable parameter dtypes after QLoRA preparation: {trainable_dtypes}")
