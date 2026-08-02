@@ -18,6 +18,11 @@ A reproducible research project for improving Python code generation with
 Group Relative Policy Optimization (GRPO), execution-based rewards, and a
 leakage-aware HumanEval protocol.
 
+Latest controlled result: Base `0.4091` -> SFT `0.4091` -> SFT+GRPO `0.4545`
+on the 22-task internal held-out split. See the
+[experiment report](docs/experiment_results.md) for task-level changes and
+limitations.
+
 The main controlled experiment is split into five stages:
 
 1. build deterministic train/validation/test data;
