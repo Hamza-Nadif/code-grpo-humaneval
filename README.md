@@ -25,6 +25,10 @@ on the 22-task internal held-out split. See the
 [experiment report](docs/experiment_results.md) for task-level changes and
 limitations.
 
+Across seeds 42, 7, and 123, final SFT+GRPO pass@1 was
+`0.4242 +/- 0.0525` (sample SD), versus a deterministic baseline of `0.4091`.
+The mean gain is not stable enough to claim a robust quality improvement.
+
 The main controlled experiment is split into five stages:
 
 1. build deterministic train/validation/test data;

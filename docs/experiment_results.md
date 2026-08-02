@@ -48,3 +48,36 @@ Run [`code_sft_grpo_humaneval_experiment.ipynb`](../notebooks/code_sft_grpo_huma
 on a Colab T4 GPU. The notebook packages the final adapters, scored samples,
 environment metadata, and machine-readable comparison in
 `code-sft-grpo-humaneval-results.zip`.
+
+## Three-seed replication
+
+The complete pipeline was repeated with seeds 42, 7, and 123 while keeping the
+data split, model, decoding settings, and optimization budgets fixed.
+
+| Seed | Base | SFT | SFT + GRPO | Final delta |
+|---:|---:|---:|---:|---:|
+| 42 | 0.4091 | 0.4091 | 0.4545 | +0.0455 |
+| 7 | 0.4091 | 0.4545 | 0.4545 | +0.0455 |
+| 123 | 0.4091 | 0.3636 | 0.3636 | -0.0455 |
+| **Mean** | **0.4091** | **0.4091** | **0.4242** | **+0.0152** |
+| **Sample SD** | **0.0000** | **0.0455** | **0.0525** | **0.0525** |
+
+Two of three seeds improved the final score by one task, while one seed lost
+one task. GRPO improved pass@1 over SFT only for seed 42; it preserved the SFT
+score for seeds 7 and 123. Across seeds, GRPO's mean incremental delta over SFT
+was `+0.0152` with sample standard deviation `0.0262`.
+
+Task transitions expose consistent and variable behavior:
+
+- `HumanEval/62` was gained by SFT for all three seeds.
+- `HumanEval/8` was lost by SFT for all three seeds.
+- `HumanEval/151` was gained for seeds 42 and 7.
+- `HumanEval/6` was lost for seeds 42 and 123.
+- `HumanEval/161` was gained by GRPO only for seed 42.
+
+The final mean is slightly above the baseline, but variability is larger than
+the mean gain. The experiment therefore supports a narrower conclusion: the
+SFT-to-GRPO pipeline is functional and can improve individual tasks, but this
+configuration does not establish a robust aggregate improvement. Larger test
+sets, additional training data, or richer execution rewards are needed before
+making a model-quality claim.

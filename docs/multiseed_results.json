@@ -1,0 +1,47 @@
+{
+  "model": "Qwen/Qwen2.5-Coder-0.5B-Instruct",
+  "test_split": "HumanEval internal held-out",
+  "held_out_tasks": 22,
+  "seeds": [
+    {
+      "seed": 42,
+      "base_pass_at_1": 0.4090909090909091,
+      "sft_pass_at_1": 0.4090909090909091,
+      "sft_grpo_pass_at_1": 0.45454545454545453,
+      "total_delta": 0.045454545454545414,
+      "grpo_zero_gradient_steps": 24,
+      "grpo_mean_clipped_ratio": 0.0
+    },
+    {
+      "seed": 7,
+      "base_pass_at_1": 0.4090909090909091,
+      "sft_pass_at_1": 0.45454545454545453,
+      "sft_grpo_pass_at_1": 0.45454545454545453,
+      "total_delta": 0.045454545454545414,
+      "grpo_zero_gradient_steps": 26,
+      "grpo_mean_clipped_ratio": 0.0
+    },
+    {
+      "seed": 123,
+      "base_pass_at_1": 0.4090909090909091,
+      "sft_pass_at_1": 0.36363636363636365,
+      "sft_grpo_pass_at_1": 0.36363636363636365,
+      "total_delta": -0.04545454545454547,
+      "grpo_zero_gradient_steps": 29,
+      "grpo_mean_clipped_ratio": 0.01
+    }
+  ],
+  "aggregate": {
+    "base_mean": 0.4090909090909091,
+    "sft_mean": 0.4090909090909091,
+    "sft_sample_standard_deviation": 0.04545454545454544,
+    "sft_grpo_mean": 0.42424242424242425,
+    "sft_grpo_sample_standard_deviation": 0.0524863881081478,
+    "total_delta_mean": 0.015151515151515119,
+    "total_delta_sample_standard_deviation": 0.05248638810814781,
+    "grpo_delta_over_sft_mean": 0.015151515151515138,
+    "grpo_delta_over_sft_sample_standard_deviation": 0.02624319405407389
+  },
+  "conclusion": "The pipeline is functional, but the aggregate gain is not stable across three seeds.",
+  "scope_note": "Custom 22-task split; not an official HumanEval leaderboard result."
+}
